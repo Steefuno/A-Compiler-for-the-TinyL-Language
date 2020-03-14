@@ -5,14 +5,10 @@ echo ""
 echo "START"
 echo ""
 
-make clean
-make
-
 for FILE in $FILES
 do
-	./compile $FILE
-	./optimize < tinyL.out > opt.out
-	./run opt.out
+	./compile.sol $FILE
+	./optimize.sol < tinyL.out
 	echo ""
 done
 
