@@ -98,29 +98,55 @@ static int digit()
 
 static int var()
 {
-	/* YOUR CODE GOES HERE */
+	if (!is_identifier(token)) {
+		ERROR("Symbol %c unknown\n", token);
+		exit(EXIT_FAILURE);
+	}
+
+	int id = (int)token;
+
+	next_token();
+	return id;
 }
 
 static int expr()
 {
-	
+	OpCode op;
+	int reg, id;
+
 	switch (token) {
-	case '+':
-	/* YOUR CODE GOES HERE */
-    	return arith_expr();
-    /* YOUR CODE GOES HERE */
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':
-		return digit();
-	default:
+		case '+':
+		case '-':
+		case '*':
+			return arith_expr();
+		case '&':
+		case '|':
+			return logical_expr();
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+			op = LOAD;
+			reg = next_register();
+			id = var();
+
+			CodeGen(op, reg, id, 0);
+			
+			return reg;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			return digit();
+		default:
 		ERROR("Symbol %c unknown\n", token);
 		exit(EXIT_FAILURE);
 	}
@@ -129,56 +155,178 @@ static int expr()
 static int arith_expr()
 {
 	int reg, left_reg, right_reg;
+	OpCode op;
+
 	switch (token) {
-	case '+':
-		next_token();
-		left_reg = expr();
-		right_reg = expr();
-		reg = next_register();
-		CodeGen(ADD, reg, left_reg, right_reg);
-		return reg;
-		/* YOUR CODE GOES HERE */
+		case '+':
+			op = ADD;
+			break;
+		case '-':
+			op = SUB;
+			break;
+		case '*':
+			op = MUL;
+			break;
+		default:
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
 	}
+	next_token();
+
+	left_reg = expr();
+
+	right_reg = expr();
+
+	reg = next_register();
+
+	CodeGen(op, reg, left_reg, right_reg);
+
+	return reg;
 }
 
 static int logical_expr()
 {
-	/* YOUR CODE GOES HERE */
+	int reg, left_reg, right_reg;
+	OpCode op;
+
+	switch (token) {
+		case '&':
+			op = AND;
+			break;
+		case '|':
+			op = OR;
+			break;
+		default:
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+	next_token();
+
+	left_reg = expr();
+
+	right_reg = expr();
+
+	reg = next_register();
+	CodeGen(op, reg, left_reg, right_reg);
+
+	return reg;
 }
 
 static void assign()
 {
-	/* YOUR CODE GOES HERE */
+	OpCode op = STORE;
+
+	int id = var();
+
+	if (token != '=') {
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+	next_token();
+
+	int reg = expr();
+
+	CodeGen(op, id, reg, 0);
+
+	return;
 }
 
 static void read()
 {
-	/* YOUR CODE GOES HERE */
+	OpCode op = READ;
+
+	if (token != '%') {
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+	next_token();
+
+	int id = var();
+
+	CodeGen(op, id, 0, 0);
+
+	return;
 }
 
 static void print()
 {
-	/* YOUR CODE GOES HERE */
+	OpCode op = WRITE;
+
+	if (token != '$') {
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+	next_token();
+
+	int id = var();
+
+	CodeGen(op, id, 0, 0);
+
+	return;
 }
 
 static void stmt()
 {
-	/* YOUR CODE GOES HERE */
+	switch (token) {
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+			assign();
+			break;
+		case '%':
+			read();
+			break;
+		case '$':
+			print();
+			break;
+		default:
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return;
 }
 
 static void morestmts()
 {
-	/* YOUR CODE GOES HERE */
+	switch (token) {
+		case ';':
+			next_token();
+
+			stmtlist();
+			break;
+		default:
+		break;
+	}
+
+	return;
 }
 
 static void stmtlist()
 {
-	/* YOUR CODE GOES HERE */
+	stmt(); 
+
+	morestmts();
+
+	return;
 }
 
 static void program()
 {
-	/* YOUR CODE GOES HERE */
+	stmtlist();
+
+	if (token != '!') {
+		ERROR("End of program input\n");
+		exit(EXIT_FAILURE);
+	}
+	// Can't check if EOF?
+
+	
+
+	return;
 }
 
 /*************************************************************************/
